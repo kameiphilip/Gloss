@@ -1,0 +1,36 @@
+Name: UEFI-C
+
+Variables:
+  - Compiler: x86_64-w64-mingw32-gcc
+
+Tasks:
+  - Name: Compile
+    Variables:
+      - Flags
+      - Sources
+      - ObjectDir
+      - EFIDir
+    Commands:
+      - Iterate: Source $Sources
+        Variables:
+          - Object: +AddSuffix(+Replace($Source, +Dir($Source), $ObjectDir), .o)
+        Conditions:
+          - Newer: $Source $Object
+        Commands:
+          - Shell: echo Compiling $Source to $Object
+          # - Shell: echo $EFIDir
+          - Tool: Path Create(+Dir($Object))
+          - Shell: $Compiler -I $EFIDir -I $EFIDir/x86_64 -I $EFIDir/protocol $Flags -c -o $Object $Source
+
+  - Name: Link
+    Variables:
+      - Flags
+      - Objects
+      - Libraries
+      - Output
+    Conditions:
+      - Newer: $Objects $Output
+    Commands:
+      - Shell: echo Linking $Output
+      - Tool: Path Create(+Dir($Output))
+      - Shell: $Compiler -Wl,-dll -shared -Wl,--subsystem,10 $Flags -o $Output $Objects +AddPrefix($Libraries, -l)

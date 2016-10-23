@@ -1,0 +1,83 @@
+YABS-Version: 1
+
+###############################################################################
+# Projects                                                                    #
+#  - Debug: Adds debugging symbols to the binary.                             #
+#  - Develop: Adds debugging symbols to the binary and turn on optimizations. #
+#  - Release: Turns on optimizations.                                         #
+###############################################################################
+Projects:
+  - Name: Gloss-UEFI
+    Variables:
+      - ProjectDir: UEFI
+      - SourceDir: $ProjectDir/Source
+      - BuildDir: $ProjectDir/Build
+      - ObjectDir: $BuildDir/Objects
+      - EFIDir: $ProjectDir/Dependencies/gnu-efi-3.0.4
+
+      - Libraries: gcc
+      - Binary: $BuildDir/BOOTX64.EFI
+      
+      - CFlags: -Wall -Wextra -ffreestanding
+      - LinkFlags: -nostdlib -e efi_main
+
+      - Compiler: UEFI-C
+
+###############################################################################
+# Configurations                                                              #
+#  - Debug: Adds debugging symbols to the binary.                             #
+#  - Develop: Adds debugging symbols to the binary and turn on optimizations. #
+#  - Release: Turns on optimizations.                                         #
+###############################################################################
+Configurations:
+  - Name: Debug
+    Variables:
+      - C++Flags: -g -DDEBUG
+  - Name: Develop
+    Variables:
+      - C++Flags: -g -O2 -DDEVELOP
+  - Name: Release
+    Variables:
+      - C++Flags: -O2 -DRELEASE
+
+###############################################################################
+# Targets                                                                     #
+#  - Build: Compiles and links all source files.                              #
+#  - Clean: Removes all object files and binaries.                            #
+#  - Rebuild: First executes the 'Clean' target, and then the 'Build' target. #
+#  - Install: Copies the binary and all tool definitions to the $PATH.        #
+#  - Test: Runs the test suite.                                               #
+#  - Dependencies: Builds the 'yaml-cpp' library.                             #
+###############################################################################
+Targets:
+  - Name: Build
+    Commands:
+      - Tool: UEFI-C Compile($CFlags, +Find($SourceDir, *.c), $ObjectDir, $EFIDir/inc)
+      - Tool: UEFI-C Compile($CFlags, $EFIDir/lib/data.c, $ObjectDir, $EFIDir/inc)
+      - Tool: UEFI-C Link($LinkFlags, +Find($ObjectDir, *.o), $Libraries, $Binary)
+
+  - Name: Clean
+    Commands:
+      - Tool: Path Delete($BuildDir)
+
+  - Name: Rebuild
+    Dependencies:
+      - Clean
+      - Build
+
+  - Name: Image
+    Dependencies:
+      - Build
+    Commands:
+      - Tool: Path Create(Build)
+      - Shell: dd if=/dev/zero of=Build/efifat.img bs=1k count=1440
+      - Shell: "mformat -i Build/efifat.img -f 1440 ::"
+      - Shell: mmd -i Build/efifat.img ::/EFI
+      - Shell: mmd -i Build/efifat.img ::/EFI/BOOT
+      - Shell: mcopy -i Build/efifat.img UEFI/Build/BOOTX64.EFI ::/EFI/BOOT
+
+  - Name: Run
+    Dependencies:
+      - Image
+    Commands:
+      - Shell: qemu-system-x86_64 -L UEFI/Dependencies/OVMF/ -bios OVMF.fd -usb -usbdevice disk::Build/efifat.img
