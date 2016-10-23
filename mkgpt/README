@@ -1,0 +1,57 @@
+mkgpt
+-----
+
+By John Cronin <jncronin@tysos.org>
+
+This is a simple utility to generate a hard disk image file partitioned using
+the GPT scheme from a collection of partition image files.  A protective MBR
+is also generated in sector 0.
+
+
+Prerequisites
+-------------
+
+Make, C compiler and standard C library
+
+
+Building
+--------
+
+./configure
+make
+make install
+
+
+Usage
+-----
+
+mkgpt -o <output_file> [global options] [part def 1] [part def 2] ...
+
+Global options:
+	-h 						Dump help
+	--sector-size <size>	Sector size of image (default 512)
+	-s <min image size>		Minimum image size to produce (in sectors)
+								defaults to 2048
+	--disk-guid <GUID>		GUID to use for the disk image (defaults to a
+								random value)
+								
+Partition definition:
+	--part <image file> --type <type> [partition options]
+	
+image file is the file to use as the partition image
+type is the type of the image, can be:
+	system					EFI System Partition
+	bios 					BIOS Boot Partition
+	linux					Linux Filesystem Data Partition
+	fat32 or ntfs			Windows Basic Data Partition
+	
+	any MBR partition ID (e.g. 0x83)
+	
+	a GUID
+	
+Partition options:
+	--uuid <GUID>			UUID of the partition (defaults to a random value)
+	--name <parition name>	Name of the partition (defaults to 'partX' where X
+								is the partition index starting at 1)
+
+	
