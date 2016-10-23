@@ -15,11 +15,11 @@ Projects:
       - ObjectDir: $BuildDir/Objects
       - EFIDir: $ProjectDir/Dependencies/gnu-efi-3.0.4
 
-      - Libraries: gcc
+      - Libraries: gcc efi
       - Binary: $BuildDir/BOOTX64.EFI
       
       - CFlags: -Wall -Wextra -ffreestanding
-      - LinkFlags: -nostdlib -e efi_main
+      - LinkFlags: -nostdlib -e EFIStart -L $EFIDir/x86_64/lib -L $EFIDir/x86_64/gnuefi
 
       - Compiler: UEFI-C
 
@@ -53,7 +53,6 @@ Targets:
   - Name: Build
     Commands:
       - Tool: UEFI-C Compile($CFlags, +Find($SourceDir, *.c), $ObjectDir, $EFIDir/inc)
-      - Tool: UEFI-C Compile($CFlags, $EFIDir/lib/data.c, $ObjectDir, $EFIDir/inc)
       - Tool: UEFI-C Link($LinkFlags, +Find($ObjectDir, *.o), $Libraries, $Binary)
 
   - Name: Clean
@@ -81,3 +80,10 @@ Targets:
       - Image
     Commands:
       - Shell: qemu-system-x86_64 -L UEFI/Dependencies/OVMF/ -bios OVMF.fd -usb -usbdevice disk::Build/efifat.img
+
+  - Name: Dependencies
+    Commands:
+      - Persistence: Start
+      - Tool: Path Change(UEFI/Dependencies/gnu-efi-3.0.4)
+      - Shell: make
+      - Persistence: End

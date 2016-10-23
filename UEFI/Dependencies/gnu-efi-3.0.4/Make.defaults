@@ -52,12 +52,12 @@ INSTALL	     := install
 
 # Compilation tools
 HOSTCC       := $(prefix)gcc
-CC           := $(prefix)$(CROSS_COMPILE)gcc
-AS           := $(prefix)$(CROSS_COMPILE)as
-LD           := $(prefix)$(CROSS_COMPILE)ld
-AR           := $(prefix)$(CROSS_COMPILE)ar
-RANLIB       := $(prefix)$(CROSS_COMPILE)ranlib
-OBJCOPY      := $(prefix)$(CROSS_COMPILE)objcopy
+CC           := x86_64-w64-mingw32-gcc
+AS           := x86_64-w64-mingw32-as
+LD           := x86_64-w64-mingw32-ld
+AR           := x86_64-w64-mingw32-ar
+RANLIB       := x86_64-w64-mingw32-ranlib
+OBJCOPY      := x86_64-w64-mingw32-objcopy
 
 
 # Host/target identification
